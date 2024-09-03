@@ -1,23 +1,14 @@
-import { Attachment } from "postmark";
-import { Message } from "../models";
+import { Attachment, TemplatedMessage } from "postmark";
+import { ContextReciepentsConfig, MessageBuilderModel, MessageReceipent } from "../messages.types";
 
-interface MessageBuilderModel {
-    withFrom(from: string): MessageBuilder;
-    withTo(to: string): MessageBuilder;
-    withTemplateModel(model: Record<string, any>): MessageBuilder;
-    withTag(tag: string): MessageBuilder;
-    withMessageStream(stream: string): MessageBuilder;
-    withTemplateId(templateId: number): MessageBuilder;
-    withAttachments(attachments: Attachment[]): MessageBuilder;
-    buildMessage(): Message;
-}
+
 
 export class MessageBuilder implements MessageBuilderModel {
 
-    private message: Message;
+    private message: TemplatedMessage;
 
     constructor() {
-        this.message = new Message();
+        this.message = new TemplatedMessage('default', 111, {});
     }
 
     withFrom(from: string) {
@@ -55,7 +46,29 @@ export class MessageBuilder implements MessageBuilderModel {
         return this;
     }
 
-    buildMessage(): Message {
+    basicTemplatedMessage(receipent: MessageReceipent & ContextReciepentsConfig) {
+        this.withFrom(receipent.From)
+            .withTo(receipent.email)
+            .withMessageStream(receipent.MessageStream)
+            .withTemplateId(receipent.TemplateId)
+            .withTag(receipent.Tag);
+
+        // has variables
+        if (receipent.TemplateModel) {
+            this.
+                withTemplateModel(receipent.TemplateModel)
+        }
+
+        // has some documents
+        if (receipent.Attachments) {
+            this
+                .withAttachments(receipent.Attachments)
+        }
+
+        return this;
+    }
+
+    buildMessage(): TemplatedMessage {
         return this.message;
     }
 
